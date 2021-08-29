@@ -44,6 +44,57 @@ function createAndAddChild(parent, childTag, properties){
 }
 
 
+
+/***
+ * `addSearchField` function
+***/
+function addSearchField(){
+   const header = document.querySelector('.header');
+   const label = createElement('label', {'for': 'search', 'className': 'student-search'});
+   createAndAddChild(label, 'span', {'textContent': 'Search By Name'});
+   createAndAddChild(label, 'input', {'type': 'text', 'id': 'search', 'placeholder': 'Search By Name...'});
+   const button = createElement('button', {'type': 'button'});
+   createAndAddChild(button, 'img', {'src': 'img/icn-search.svg', 'alt': 'search icon'});
+   label.appendChild(button);
+   header.appendChild(label);
+}
+
+addSearchField();
+
+// grab search input field and the student list
+const input = document.getElementById('search');
+const studentList = document.querySelector('.student-list');
+
+const searchMsg = createAndAddChild(studentList, 'li', {'className': ['student-item', 'no-user', 'h3'], 'style': 'display: none'});
+
+const lis = studentList.children;
+
+function search(text){
+   let count = 0;
+   for(let i = 0; i < lis.length; i++){
+      if(lis[i].textContent.toLowerCase().includes(text.toLowerCase())){
+         lis[i].style.display = '';
+      }else{
+         lis[i].style.display = 'none';
+         count++;
+      }
+   }
+
+   let noUser = document.querySelector('.no-user');
+
+   if(count === lis.length && text.length > 0){
+      noUser.innerHTML = `No users Found for <h3 style="color: red">${text}</h3>`;
+      noUser.style.display = '';
+   }else{
+      noUser.innerHTML = '';
+      noUser.style.display = 'none';
+   }
+}
+
+input.addEventListener('keyup', (e)=>{
+   search(e.target.value);
+});
+
 /*
 Create the `showPage` function
 This function will create and insert/append the elements needed to display a "page" of nine students
@@ -51,15 +102,12 @@ This function will create and insert/append the elements needed to display a "pa
 @params{pageNumber} integer: current page number
 */
 
-const studentList = document.querySelector('.student-list');
-
 function showPage(listOfStudents, pageNumber){
    let startIndex = (pageNumber * 9) - 9, endIndex = pageNumber * 9;
 
    for(let i = startIndex; i < endIndex; i++){
 
       let each = listOfStudents[i];
-
       if(each === undefined){
          break;
       }
@@ -69,6 +117,7 @@ function showPage(listOfStudents, pageNumber){
       // div student-details
       const div = createElement('div', {'className': ['student-details']});
 
+      // creating and appending img, h3 and span tag to the div element
       createAndAddChild(div, 'img', {'src': each['picture']['large'], 'alt': 'profile picture', 'className': 'avatar'})
 
       createAndAddChild(div, 'h3', {'textContent': each['name']['first'] + ' ' + each['name']['last']})
@@ -98,6 +147,7 @@ function addPagination(listOfStudents){
    let numberOfPages = Math.round(listOfStudents.length / 9);
    for(let i = 1; i <= numberOfPages; i++){
       let li = document.createElement('li');
+      // if the site is just loaded we need to have at least one page with active state
       if(i === 1){
          createAndAddChild(li, 'button', {'type': 'button', 'value': i, 'textContent': i, 'className': 'active'});
       }else{
@@ -107,10 +157,23 @@ function addPagination(listOfStudents){
    }
 }
 
+function hideExtraButtons(){
+   const active = document.querySelector('.active');
+   for(let each of linkList.children){
+      let val = parseInt(each.firstChild.value);
+      let activeVal = parseInt(active.value);
+      if(val === activeVal || val === activeVal - 1 || val === activeVal + 1){
+         each.style.display = '';
+      }else{
+         each.style.display = 'none';
+      }
+   }
+}
 
 // Call functions
 showPage(data, 1);
 addPagination(data);
+hideExtraButtons();
 
 /***
  * `removeAndAddActive` funtion
@@ -124,11 +187,19 @@ function removeAndAddActive(e){
    e.target.classList.add('active');
 }
 
+/***
+ * `add event listener to the links`
+ * if the target is a button then 
+ * remove the active state from the previous button and add to the new one
+ * and fetch new items
+ ***/
+
 linkList.addEventListener('click', (e)=>{
    if(e.target.tagName === 'BUTTON'){
       removeAndAddActive(e);
       let pagenumber = e.target.value;
       showPage(data, pagenumber);
+      hideExtraButtons();
    }
 });
 
